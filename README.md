@@ -8,9 +8,18 @@ You can edit the parser as you want, I just made it to fit certain needs.
 
 ## Setup
 
-### Installation
+Clone project to your local workstation with git: 
 
-Start out by installing the packages with `npm ci`.
+```
+git clone git@github.com:Rantti/bike-weather-wrangler.git
+```
+
+Change to project directory and install packages
+
+```
+cd bike-weather-wrangler
+npm ci
+```
 
 ### Input - adding datafiles
 
