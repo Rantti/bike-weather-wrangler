@@ -20,9 +20,17 @@ function importWeatherRows() {
     fs.createReadStream(`./${FILE_NAME_WEATHER_DATA}`)
         .pipe(parse({ delimiter: ',', from_line: 2 }))
         .on('data', function (row) {
-            const [year, month, day, time, , precipitation, temperature, wind] = row;
-            const timestamp = `${day}.${month}.${year} ${time}`;
-            const rowObject = { timestamp, precipitation, temperature, wind, rides: 0, total_rides: 0 };
+            const [ year, month, day, hour, , precipitation, temperature, wind ] = row;
+            const date = `${day}.${month}.${year}`;
+            const rowObject = {
+                date,
+                hour,
+                precipitation: precipitation === '-' ? 0 : precipitation,
+                temperature: temperature === '-' ? 0 : temperature,
+                wind: wind === '-' ? 0 : wind,
+                rides: 0,
+                total_rides: 0
+            };
             weatherRows.push(rowObject);
         })
         .on('end', function () {
@@ -45,7 +53,7 @@ function importWeatherRows() {
  */
 function bikeRowMatches(bikeRow, weatherRow, debug = false) {
     const { departure_time: bikeTime } = bikeRow;
-    const { timestamp: weatherTimeStamp } = weatherRow;
+    const { date: weatherTimeStamp, hour } = weatherRow;
 
     const bikeTimeStamp = bikeTime.slice(0, -2) + '00';
 
@@ -53,7 +61,7 @@ function bikeRowMatches(bikeRow, weatherRow, debug = false) {
         console.log(`${bikeTime} vs ${weatherTimeStamp}`);
     }
 
-    return bikeTimeStamp === weatherTimeStamp;
+    return bikeTimeStamp === `${weatherTimeStamp} ${hour}`;
 }
 
 function addRides() {
@@ -106,9 +114,8 @@ function addTotalRides() {
 
 function writeToFile() {
     const writableStream = fs.createWriteStream(FILE_NAME_RESULT);
-    const RESULT_FILE_COLUMNS = ['timestamp', 'precipitation', 'temperature', 'wind', 'rides', 'total_rides'];
+    const RESULT_FILE_COLUMNS = ['date', 'hour', 'precipitation', 'temperature', 'wind', 'rides', 'total_rides'];
     const stringifier = stringify({ header: true, columns: RESULT_FILE_COLUMNS });
-
     weatherRows.forEach((row) => stringifier.write(row));
     stringifier.pipe(writableStream);
 
